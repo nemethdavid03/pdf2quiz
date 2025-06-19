@@ -1,101 +1,222 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useRef, FormEvent } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import PdfUploader from "./components/PdfUploader";
+import QuizList from "./components/QuizList";
+import FAQ from "./components/Faq";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+type QuizQuestion = {
+  question: string;
+  options: string[];
+  correct: number;
+};
+
+export default function HomePage() {
+  const [quiz, setQuiz] = useState<QuizQuestion[] | null>(null);
+  const [answers, setAnswers] = useState<(string | null)[]>([]);
+  const [score, setScore] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [showUploader, setShowUploader] = useState(true);
+  const [numQuestions, setNumQuestions] = useState<number>(5);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const fileRef = useRef<File | null>(null);
+
+  const handleFileSelect = (file: File) => {
+    setSelectedFileName(file.name);
+    fileRef.current = file;
+  };
+
+  const handleUpload = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setQuiz(null);
+    setAnswers([]);
+    setScore(null);
+
+    const file = fileRef.current;
+    if (!file || file.type !== "application/pdf") {
+      setError("Please select a valid PDF file.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("pdf", file);
+      formData.append("numQuestions", numQuestions.toString());
+
+      const res = await fetch("/api/generate-quiz", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const json = await res.json();
+        setError(json.error ?? "Something went wrong.");
+        setLoading(false);
+        return;
+      }
+
+      const json = await res.json();
+      setQuiz(json.quiz);
+      setAnswers(new Array(json.quiz.length).fill(null));
+      setShowUploader(false);
+      setIsDialogOpen(true); // automatikusan nyitjuk a dialógot
+    } catch (err: any) {
+      setError(err.message || "Network error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnswer = (index: number, answer: string) => {
+    setAnswers((prev) => {
+      const updated = [...prev];
+      updated[index] = answer;
+      return updated;
+    });
+  };
+
+  const evaluate = () => {
+    if (!quiz) return;
+    const correctCount = quiz.reduce((acc, q, i) => {
+      return acc + (answers[i] === q.options[q.correct] ? 1 : 0);
+    }, 0);
+    setScore(correctCount);
+  };
+
+  // Csak a feltöltési állapot reset, quiz megmarad
+  const resetUploader = () => {
+    setShowUploader(true);
+    setScore(null);
+    setAnswers([]);
+    setError(null);
+    fileRef.current = null;
+    setSelectedFileName(null);
+  };
+
+  // Teljes reset: quiz törlése + uploader visszaállítás + dialóg zárása
+  const resetAll = () => {
+    setQuiz(null);
+    resetUploader();
+    setIsDialogOpen(false);
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main className="min-h-screen py-24 px-6">
+      <section className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+        <div className="max-w-xl mx-auto md:mx-0 text-center md:text-left">
+          <h1 className="text-6xl font-extrabold tracking-tight drop-shadow-md leading-[1.1]">
+            Turn your PDFs into engaging AI-powered quizzes
+          </h1>
+          <p className="mt-6 text-lg text-gray-500 leading-relaxed max-w-lg drop-shadow-sm">
+            Upload any PDF document and instantly generate quizzes that help
+            reinforce learning and measure knowledge retention, powered by
+            advanced AI technology.
+          </p>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          {/* Gomb a dialóg újbóli megnyitásához, ha quiz készen van és dialóg zárva */}
+          {quiz && !isDialogOpen && (
+            <div className="mt-6 flex space-x-4">
+              <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+                Show Quiz
+              </Button>
+              <Button variant="destructive" onClick={resetAll}>
+                Reset All
+              </Button>
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <div className="relative rounded-3xl p-12 w-full mx-auto border">
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" />
+          {showUploader ? (
+            <form onSubmit={handleUpload} className="space-y-8 relative z-10">
+              <PdfUploader onFileSelect={handleFileSelect} selectedFileName={selectedFileName} />
+
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="numQuestions" className="text-sm font-medium text-gray-500">
+                  Number of questions
+                </label>
+                <Input
+                  id="numQuestions"
+                  type="number"
+                  value={numQuestions}
+                  onChange={(e) => setNumQuestions(Number(e.target.value))}
+                  min={1}
+                  max={20}
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                variant={"default"}
+                size={"lg"}
+                disabled={loading}
+                className="w-full bg-green-400 text-gray-900 hover:bg-green-500
+                  font-semibold
+                  disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading ? "Generating Quiz..." : "Generate Quiz"}
+              </Button>
+              {error && (
+                <p className="mt-4 text-red-600 font-semibold drop-shadow-sm">
+                  {error}
+                </p>
+              )}
+            </form>
+          ) : (
+            <div className="flex flex-col space-y-6 relative z-10">
+              <div className="flex items-center space-x-5 pb-5">
+                <span className="text-6xl select-none">📄</span>
+                <p className="text-lg font-semibold truncate dark:text-gray-100">{selectedFileName}</p>
+              </div>
+              <button
+                onClick={resetUploader}
+                className="self-start text-green-400 font-semibold hover:underline transition"
+              >
+                Upload Another PDF
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Quiz Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-4xl w-full">
+          <DialogHeader>
+            <DialogTitle>Quiz</DialogTitle>
+            <DialogDescription>Answer the questions generated from your PDF</DialogDescription>
+            <DialogClose className="absolute top-4 right-4" />
+          </DialogHeader>
+
+          {quiz && (
+            <QuizList
+              quiz={quiz}
+              answers={answers}
+              onAnswer={handleAnswer}
+              onEvaluate={evaluate}
+              score={score}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </main>
   );
 }

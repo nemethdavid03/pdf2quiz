@@ -1,0 +1,1 @@
+export const SiteName = "PDF2Quiz";
