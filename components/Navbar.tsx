@@ -50,10 +50,10 @@ export default function Navbar() {
 
     // Stripe árak (ezeket a backend Stripe áraid alapján kell beállítani)
     const prices = [
-        { id: "price_1RbhlFKCoI8upLTCUkpyTI2A", name: "Mega Pack", credits: 100, price: "$30" },
-        { id: "price_1Example1", name: "Small Pack", credits: 10, price: "$5" },
-        { id: "price_1Example2", name: "Medium Pack", credits: 25, price: "$12" },
-        { id: "price_1Example3", name: "Large Pack", credits: 60, price: "$25" },
+        { id: "price_1RbOBoKCoI8upLTC3lUOYLnb", name: "50 Credits", credits: 50, price: "$1.59" },
+        { id: "price_1RbOCzKCoI8upLTCzJgoaavK", name: "100 Credits", credits: 100, price: "$3.01" },
+        { id: "price_1RbODUKCoI8upLTCofok4dvP", name: "200 Credits", credits: 200, price: "$5.99" },
+        { id: "price_1RbOEjKCoI8upLTCjEPsp6Cj", name: "600 Credits", credits: 600, price: "$14.99" },
     ];
 
     const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
@@ -125,7 +125,7 @@ export default function Navbar() {
 
                             <DialogContent className="max-w-md w-full">
                                 <DialogHeader>
-                                    <DialogTitle>Buy Tokens</DialogTitle>
+                                    <DialogTitle>Buy Credits</DialogTitle>
                                     <DialogDescription>
                                         Select a package to purchase tokens for using the service.
                                     </DialogDescription>
@@ -137,9 +137,8 @@ export default function Navbar() {
                                             key={pack.id}
                                             className="border justify-between aspect-square w-full h-full flex flex-col p-4 text-center rounded-md shadow hover:shadow-lg transition cursor-pointer"
                                         >
-                                            <span className="mt-4 text-sm">{pack.name}</span>
-                                            <span className="font-semibold text-xl my-2">
-                                                {pack.credits} tokens
+                                            <span className="text-md my-2">
+                                                {pack.credits} credits
                                             </span>
                                             <span className="text-lg font-bold">{pack.price}</span>
                                             <Button
@@ -147,7 +146,7 @@ export default function Navbar() {
                                                 onClick={() => handleCheckout(pack.id)}
                                                 className="mt-auto"
                                             >
-                                                {loadingPriceId === pack.id ? "Betöltés..." : "Vásárlás"}
+                                                {loadingPriceId === pack.id ? "Loading" : "Buy now"}
                                             </Button>
                                         </div>
                                     ))}
