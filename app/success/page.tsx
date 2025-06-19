@@ -1,7 +1,4 @@
-
-import dynamic from "next/dynamic";
-
-const ClientSuccess = dynamic(() => import("./components/ClientSuccess"), { ssr: false });
+import ClientSuccess from "./components/ClientSuccess";
 
 export default function SuccessPage() {
     return <ClientSuccess />;
