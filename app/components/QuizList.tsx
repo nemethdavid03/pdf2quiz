@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, PDFFont, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { saveAs } from "file-saver";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,6 @@ export default function QuizList({
     };
 
     const handleDownloadPDF = async () => {
-        // Roboto font betöltése a public/fonts mappából
         const fontBytes = await fetch("/fonts/roboto.ttf").then((res) =>
             res.arrayBuffer()
         );
@@ -49,7 +48,7 @@ export default function QuizList({
         pdfDoc.registerFontkit(fontkit);
         const robotoFont = await pdfDoc.embedFont(fontBytes);
 
-        let page = pdfDoc.addPage([595, 842]); // A4 méret (pt-ben)
+        let page = pdfDoc.addPage([595, 842]);
         const marginLeft = 50;
         const marginRight = 50;
         const marginBottom = 50;
@@ -62,7 +61,7 @@ export default function QuizList({
         function wrapText(
             text: string,
             maxWidth: number,
-            font: any,
+            font: PDFFont,
             fontSize: number
         ) {
             const words = text.split(" ");

@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import PdfUploader from "./components/PdfUploader";
 import QuizList from "./components/QuizList";
-import FAQ from "./components/Faq";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -76,9 +75,14 @@ export default function HomePage() {
       setAnswers(new Array(json.quiz.length).fill(null));
       setShowUploader(false);
       setIsDialogOpen(true); // automatikusan nyitjuk a dialógot
-    } catch (err: any) {
-      setError(err.message || "Network error.");
-    } finally {
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Network error.");
+      }
+    }
+    finally {
       setLoading(false);
     }
   };

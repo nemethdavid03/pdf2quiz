@@ -74,7 +74,7 @@ export default function Navbar() {
             } else {
                 alert("Hiba történt: " + data.error);
             }
-        } catch (err) {
+        } catch {
             alert("Hiba történt a fizetés indításakor.");
         } finally {
             setLoadingPriceId(null);

@@ -129,8 +129,6 @@ Thank you!
             },
         ];
 
-
-
         // AI hívás
         const result = await ai.models.generateContent({
             model: "gemini-2.0-flash",
@@ -180,9 +178,15 @@ Thank you!
         }
 
         return NextResponse.json({ quiz, tokensLeft: deductTokens.creditsLeft });
-    } catch (e: any) {
+    } catch (e: unknown) {
+        let message = "Unknown error";
+        if (e instanceof Error) {
+            message = e.message;
+        } else if (typeof e === "string") {
+            message = e;
+        }
         return NextResponse.json(
-            { error: "Belső szerver hiba: " + (e.message || e.toString()) },
+            { error: "Belső szerver hiba: " + message },
             { status: 500 }
         );
     }
