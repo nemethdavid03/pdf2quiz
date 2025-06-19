@@ -1,9 +1,13 @@
 import ClientSuccess from "./components/ClientSuccess";
 
 interface SuccessPageProps {
-    searchParams?: { session_id?: string };
+    searchParams?: Promise<{ session_id?: string }>;
 }
 
-export default function SuccessPage({ searchParams }: SuccessPageProps) {
-    return <ClientSuccess sessionId={searchParams?.session_id ?? null} />;
+export default async function SuccessPage({ searchParams }: SuccessPageProps) {
+    // Várd meg a Promise-t
+    const params = searchParams ? await searchParams : {};
+    const sessionId = params?.session_id ?? null;
+
+    return <ClientSuccess sessionId={sessionId} />;
 }
