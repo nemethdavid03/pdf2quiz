@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-export default function ClientSuccess() {
-    const searchParams = useSearchParams();
-    const sessionId = searchParams.get("session_id");
+interface ClientSuccessProps {
+    sessionId: string | null;
+}
+
+export default function ClientSuccess({ sessionId }: ClientSuccessProps) {
     const router = useRouter();
 
     const [message, setMessage] = useState("Processing your purchase...");
